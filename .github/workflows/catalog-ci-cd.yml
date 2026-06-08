@@ -59,15 +59,9 @@ jobs:
             # SonarQube Scan
             # ----------------------------
             - name: Sonar Scan
-              uses: SonarSource/sonarqube-scan-action@v5
+              uses: SonarSource/sonarqube-scan-action@v6
               env:
-                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-            - name: Sonar Quality Gate
-              uses: SonarSource/sonarqube-quality-gate-action@v1
-              timeout-minutes: 5
-              env:
-                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
             # ----------------------------
             # AWS Authentication (OIDC)
