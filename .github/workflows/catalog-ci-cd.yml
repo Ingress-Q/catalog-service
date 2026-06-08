@@ -1,0 +1,30 @@
+name: Catalog Service CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+jobs:
+      build-and-test:
+          runs-on: ubuntu-latest
+
+          steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with: 
+                go-version: "1.22"
+
+            - name: Install Dependencies
+              run: go mod tidy
+
+            - name:  Build Application
+              run: go build ./...
+
+            - name: Run Unit Tests
+              run: go test ./...
