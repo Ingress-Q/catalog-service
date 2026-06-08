@@ -1,30 +1,151 @@
-name: Catalog Service CI
+name: Catalog Service CI/CD
 
 on:
   push:
     branches:
       - main
-
   pull_request:
 
-jobs:
-      build-and-test:
-          runs-on: ubuntu-latest
+permissions:
+    id-token: write
+    contents: read
 
-          steps:
-            - name: Checkout Code
+env:
+    IMAGE_NAME: catalog-service
+
+jobs:
+    build-test-scan-deploy:
+        runs-on: ubuntu-latest
+
+
+        steps: 
+  # ----------------------------
+  # Checkout
+  # ----------------------------
+            - name: Checkout
               uses: actions/checkout@v4
 
+  # ----------------------------
+  # Gitleaks
+  # ----------------------------
+            - name: Run Gitleaks
+              uses: gitleaks/gitleaks-action@v2
+
+  # ----------------------------
+  # Setup Go
+  # ----------------------------
             - name: Setup Go
               uses: actions/setup-go@v5
-              with: 
+              with:
                 go-version: "1.22"
 
-            - name: Install Dependencies
+            - name: Download Dependencies
               run: go mod tidy
 
-            - name:  Build Application
+            - name: Build Application
               run: go build ./...
 
-            - name: Run Unit Tests
-              run: go test ./...
+            # ----------------------------
+            # Unit Tests
+            # ----------------------------
+            - name: Run Tests
+              run: go test ./... -coverprofile=coverage.out
+
+            # ----------------------------
+            # SonarQube Scan
+            # ----------------------------
+            - name: Sonar Scan
+              uses: SonarSource/sonarqube-scan-action@v5
+              env:
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+            - name: Sonar Quality Gate
+              uses: SonarSource/sonarqube-quality-gate-action@v1
+              timeout-minutes: 5
+              env:
+                SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+            # ----------------------------
+            # AWS Authentication (OIDC)
+            # ----------------------------
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                aws-region: ${{ secrets.AWS_REGION }}
+
+            # ----------------------------
+            # ECR Login
+            # ----------------------------
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            # ----------------------------
+            # Docker Build
+            # ----------------------------
+            - name: Build Docker Image
+              run: |
+                docker build \
+                  -t ${IMAGE_NAME}:${GITHUB_SHA} .
+
+            # ----------------------------
+            # Trivy Scan
+            # ----------------------------
+            - name: Trivy Scan
+              uses: aquasecurity/trivy-action@master
+              with:
+                image-ref: ${IMAGE_NAME}:${{ github.sha }}
+                severity: CRITICAL
+                exit-code: 1
+                ignore-unfixed: true
+
+            # ----------------------------
+            # Tag Image
+            # ----------------------------
+            - name: Tag Docker Image
+              run: |
+                docker tag \
+                ${IMAGE_NAME}:${GITHUB_SHA} \
+                ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${GITHUB_SHA}
+
+            # ----------------------------
+            # Push ECR
+            # ----------------------------
+            - name: Push Docker Image
+              run: |
+                docker push \
+                ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${GITHUB_SHA}
+
+            # ----------------------------
+            # Clone GitOps Repository
+            # ----------------------------
+            - name: Clone GitOps Repo
+              run: |
+                git clone \
+                https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/org/platform-gitops.git
+
+            # ----------------------------
+            # Update Helm Values
+            # ----------------------------
+            - name: Update Image Tag
+              run: |
+                sed -i "s/tag:.*/tag: ${GITHUB_SHA}/" \
+                platform-gitops/environments/dev/catalog-service-values.yaml
+
+            # ----------------------------
+            # Commit GitOps Change
+            # ----------------------------
+            - name: Commit and Push GitOps Change
+              run: |
+                cd platform-gitops
+
+                git config user.email "gitops-bot@company.com"
+                git config user.name "gitops-bot"
+
+                git add .
+
+                git commit -m "chore(catalog): update image tag to ${GITHUB_SHA}" || true
+
+                git push origin main
+          
