@@ -121,7 +121,7 @@ jobs:
             - name: Clone GitOps Repo
               run: |
                 git clone \
-                https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/org/platform-gitops.git
+                https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/Ingress-Q/gitops-platform.git
 
             # ----------------------------
             # Update Helm Values
@@ -129,7 +129,7 @@ jobs:
             - name: Update Image Tag
               run: |
                 sed -i "s/tag:.*/tag: ${GITHUB_SHA}/" \
-                platform-gitops/environments/dev/catalog-service-values.yaml
+                gitops-platform/environments/dev/catalog-service-values.yaml
 
             # ----------------------------
             # Commit GitOps Change
