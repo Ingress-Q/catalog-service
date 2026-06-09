@@ -24,7 +24,7 @@ jobs:
   # ----------------------------
             - name: Checkout
               uses: actions/checkout@v4
-
+ 
   # ----------------------------
   # Gitleaks
   # ----------------------------
@@ -134,16 +134,25 @@ jobs:
             # ----------------------------
             # Commit GitOps Change
             # ----------------------------
-            - name: Commit and Push GitOps Change
-              run: |
-                cd gitops-platform
+        #    - name: Commit and Push GitOps Change
+         #     run: |
+         #       cd gitops-platform
+#
+#                git config user.email "gitops-bot@company.com"
+   #             git config user.name "gitops-bot"
+#
+ #               git add .
 
-                git config user.email "gitops-bot@company.com"
-                git config user.name "gitops-bot"
+  #              git commit -m "chore(catalog): update image tag to ${GITHUB_SHA}" || true
 
-                git add .
-
-                git commit -m "chore(catalog): update image tag to ${GITHUB_SHA}" || true
-
-                git push origin main
+   #             git push origin main
           
+            - name: Verify Authenticated User
+              run: |
+                  curl -H "Authorization: token ${{ secrets.GITOPS_TOKEN }}" \
+                  https://api.github.com/user
+
+            - name: Verify Repo Access
+              run: |
+                curl -H "Authorization: token ${{ secrets.GITOPS_TOKEN }}" \
+                 https://api.github.com/repos/Ingress-Q/gitops-platform
