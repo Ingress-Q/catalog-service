@@ -16,9 +16,8 @@ env:
 jobs:
     build-test-scan-deploy:
         runs-on: ubuntu-latest
+        steps:
 
-
-steps:
                - name: Checkout
                  uses: actions/checkout@v4
 
