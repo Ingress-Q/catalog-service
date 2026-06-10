@@ -134,6 +134,17 @@ jobs:
             # ----------------------------
             # Commit GitOps Change
             # ----------------------------
+            - name: Verify remote URL
+              run: |
+                 cd gitops-platform
+                 git remote -v
+
+            - name: Test PAT
+              run: |
+                curl -i \
+                  -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
+                  https://api.github.com/repos/Ingress-Q/gitops-platform
+
             - name: Commit and Push GitOps Change
               run: |
                 cd gitops-platform
