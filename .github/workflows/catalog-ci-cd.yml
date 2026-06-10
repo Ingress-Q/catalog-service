@@ -145,7 +145,36 @@ jobs:
                   -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
                   https://api.github.com/repos/Ingress-Q/gitops-platform
 
-            - name: Commit and Push GitOps Change
+          
+            - name: Check branch protection
+              run: |
+                curl -s 
+                -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
+                https://api.github.com/repos/Ingress-Q/gitops-platform/branches/main/protection
+          
+            
+            - name: Check token owner
+              run: |
+                curl -s \
+                  -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
+                  https://api.github.com/user
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+                  - name: Commit and Push GitOps Change
               run: |
                 cd gitops-platform
 
