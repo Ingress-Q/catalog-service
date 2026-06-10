@@ -150,15 +150,21 @@ jobs:
               run: |
                 curl -s 
                 -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
-                  https://api.github.com/user"
-            
+                "https://api.github.com/repos/Ingress-Q/gitops-platform/branches/main/protection"
+
+
             - name: Check token owner
               run: |
                 curl -s \
                   -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
-                  https://api.github.com/user
+                   https://api.github.com/user
+           
           
-          
+            - name: Check repo permissions
+              run: |
+                curl -i \
+                    -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
+                    "https://api.github.com/repos/Ingress-Q/gitops-platform/collaborators/Piyushhh3/permission"
           
           
           
