@@ -162,12 +162,6 @@ jobs:
           
           
           
-            - name: Check branch protection
-              run: |
-                curl -s 
-                   -H "Authorization: Bearer ${{ secrets.GITOPS_TOKEN }}" \
-                   "https://api.github.com/repos/Ingress-Q/gitops-platform/branches/main/protection"
-
 
           
           
