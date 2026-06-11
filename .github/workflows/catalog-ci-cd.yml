@@ -8,7 +8,7 @@ on:
 
 permissions:
     id-token: write
-    contents: read
+    contents: write
 
 env:
     IMAGE_NAME: catalog-service
@@ -163,7 +163,7 @@ jobs:
           
           
 
-          
+            
           
           
           
@@ -184,8 +184,7 @@ jobs:
 
                 git commit -m "chore(catalog): update image tag to ${GITHUB_SHA}" || true
                 git remote set-url origin \
-                     https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/Ingress-Q/gitops-platform.git
-
+                https://x-access-token:${GITHUB_TOKEN}@github.com/Ingress-Q/gitops-platform.git
                 git push origin main
           
             
